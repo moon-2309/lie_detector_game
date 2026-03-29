@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lie Detector VN 🕵️‍♀️</title>
+<style>
+body { margin:0; font-family:sans-serif; overflow:hidden; color:white; }
+#scene { position:absolute; width:100%; height:100%; transition:background 0.8s ease; }
+
+.character { position:absolute; bottom:120px; font-size:120px; opacity:0.8; }
+.left { left:10%; }
+.right { right:10%; }
+.center { left:50%; transform:translateX(-50%); }
+
+#ui { position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.7); padding:15px; }
+#name { font-weight:bold; }
+#text { margin-top:5px; }
+
+.choice { margin-top:8px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.1); cursor:pointer; }
+.choice:hover { background:rgba(255,255,255,0.2); }
+
+button { margin-top:10px; padding:8px 15px; border:none; border-radius:8px; background:#00c6ff; color:white; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div id="scene"></div>
+<div id="charLeft" class="character left"></div>
+<div id="charRight" class="character right"></div>
+<div id="charCenter" class="character center"></div>
+
+<div id="ui">
+  <div id="name"></div>
+  <div id="text"></div>
+  <div id="choices"></div>
+  <button onclick="next()">Next</button>
+</div>
+
+<script>
+const emojis = {
+  Alex:"🧑‍💼", Mia:"👩", Leo:"🧑", Ben:"🧑‍🔧", Ava:"👩‍💻", Cara:"👩‍🎤"
+};
+
+const backgrounds = {
+  party:"linear-gradient(#42275a,#734b6d)",
+  office:"linear-gradient(#0f2027,#203a43,#2c5364)",
+  dark:"linear-gradient(#232526,#414345)"
+};
+
+const story = [
+  {type:"scene", bg:backgrounds.party},
+  {type:"dialogue", name:"Narrator", text:"A high-profile party. Something goes missing."},
+
+  {type:"dialogue", name:"Alex", text:"I saw Mia near the table.", left:"Alex"},
+  {type:"dialogue", name:"Mia", text:"I was looking for Leo.", right:"Mia"},
+  {type:"dialogue", name:"Leo", text:"Both of you are wrong.", center:"Leo"},
+
+  {type:"choice", question:"Who feels truthful?", options:["Alex","Mia","Leo"], answer:2},
+
+  {type:"scene", bg:backgrounds.office},
+  {type:"dialogue", name:"Ava", text:"Files were accessed last night.", left:"Ava"},
+  {type:"dialogue", name:"Ben", text:"I stayed late.", right:"Ben"},
+  {type:"dialogue", name:"Cara", text:"Someone is lying.", center:"Cara"},
+
+  {type:"choice", question:"Who seems honest?", options:["Ava","Ben","Cara"], answer:1}
+];
+
+let index=0, locked=false;
+
+function setCharacters(data){
+  document.getElementById("charLeft").innerText="";
+  document.getElementById("charRight").innerText="";
+  document.getElementById("charCenter").innerText="";
+
+  if(data.left) document.getElementById("charLeft").innerText=emojis[data.left];
+  if(data.right) document.getElementById("charRight").innerText=emojis[data.right];
+  if(data.center) document.getElementById("charCenter").innerText=emojis[data.center];
+}
+
+function render(){
+  const nameEl=document.getElementById("name");
+  const textEl=document.getElementById("text");
+  const choicesEl=document.getElementById("choices");
+  const sceneEl=document.getElementById("scene");
+
+  choicesEl.innerHTML="";
+  let cur=story[index];
+
+  if(cur.type==="scene"){
+    sceneEl.style.background=cur.bg;
+    index++; render(); return;
+  }
+
+  if(cur.type==="dialogue"){
+    nameEl.innerText=cur.name;
+    textEl.innerText=cur.text;
+    setCharacters(cur);
+    locked=false;
+  }
+
+  if(cur.type==="choice"){
+    nameEl.innerText="Decision";
+    textEl.innerText=cur.question;
+    setCharacters({});
+    locked=true;
+
+    cur.options.forEach((opt,i)=>{
+      let div=document.createElement("div");
+      div.className="choice";
+      div.innerText=opt;
+
+      div.onclick=()=>{
+        if(i===cur.answer){
+          textEl.innerText="Correct.";
+          locked=false;
+        } else {
+          textEl.innerText="That doesn’t seem right.";
+        }
+      };
+      choicesEl.appendChild(div);
+    });
+  }
+}
+
+function next(){
+  if(locked) return;
+  index++;
+  if(index>=story.length){ alert("Story complete!"); index=0; }
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
